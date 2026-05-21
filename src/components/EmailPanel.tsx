@@ -10,15 +10,15 @@ function buildSubject(subject: string): string {
   return `Retroalimentación de evaluación${subject ? ` — ${subject}` : ''}`;
 }
 
+// Cuerpo breve y formal — no incluye la retroalimentación completa
 function buildBody(studentName: string, subject: string, professor: string): string {
   const name = studentName.trim() || '[nombre del estudiante]';
   const asig = subject.trim()    || '[asignatura]';
   const prof = professor.trim()  || '[profesor]';
   return (
     `Estimado/a ${name}:\n\n` +
-    `Junto con saludar, envío la retroalimentación correspondiente a su evaluación de ${asig}.\n\n` +
-    `En el documento PDF adjunto encontrará el detalle de la revisión, el puntaje obtenido y la nota correspondiente según la escala aplicada.\n\n` +
-    `Saludos cordiales,\n\n${prof}`
+    `Adjunto encontrará la retroalimentación de su evaluación de ${asig}.\n\n` +
+    `Saludos cordiales,\n${prof}`
   );
 }
 
@@ -38,62 +38,61 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
   const [emailWarning,  setEmailWarning]  = useState('');
   const [messageCopied, setMessageCopied] = useState(false);
 
-  // Auto-actualiza asunto si no fue editado manualmente
   useEffect(() => {
     if (!isManualSubj) setEmailSubject(buildSubject(subject));
   }, [subject, isManualSubj]);
 
-  // Auto-actualiza cuerpo si no fue editado manualmente
   useEffect(() => {
     if (!isManualBody) setEmailBody(buildBody(studentName, subject, professor));
   }, [studentName, subject, professor, isManualBody]);
 
   function handleOpenMail() {
-    if (!studentEmail.trim()) {
+    const email = studentEmail.trim();
+
+    if (!email) {
       setEmailWarning('Ingrese el correo del estudiante antes de continuar.');
       return;
     }
-    if (!isValidEmail(studentEmail)) {
+    if (!isValidEmail(email)) {
       setEmailWarning('El formato del correo no es válido. Revíselo e intente nuevamente.');
       return;
     }
     setEmailWarning('');
-    const mailto =
-      `mailto:${encodeURIComponent(studentEmail.trim())}` +
+
+    // La dirección va sin encodeURIComponent — el @ no debe codificarse en mailto:
+    // El asunto y el cuerpo sí se codifican con encodeURIComponent
+    const mailtoLink =
+      `mailto:${email}` +
       `?subject=${encodeURIComponent(emailSubject)}` +
       `&body=${encodeURIComponent(emailBody)}`;
-    window.location.href = mailto;
+
+    window.location.href = mailtoLink;
   }
 
   async function handleCopyMessage() {
-    const full = `Para: ${studentEmail || '[correo del estudiante]'}\nAsunto: ${emailSubject}\n\n${emailBody}`;
+    const full =
+      `Para: ${studentEmail || '[correo del estudiante]'}\n` +
+      `Asunto: ${emailSubject}\n\n` +
+      emailBody;
     try {
       await navigator.clipboard.writeText(full);
       setMessageCopied(true);
       setTimeout(() => setMessageCopied(false), 2200);
-    } catch { /* sin API */ }
-  }
-
-  function handleRestoreBody() {
-    setIsManualBody(false);
-    setEmailBody(buildBody(studentName, subject, professor));
-  }
-
-  function handleRestoreSubject() {
-    setIsManualSubj(false);
-    setEmailSubject(buildSubject(subject));
+    } catch { /* sin API clipboard */ }
   }
 
   const inputBase =
-    'w-full px-3 py-2.5 text-sm text-graphite-800 bg-white border border-graphite-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-academic-400/40 focus:border-academic-500 transition placeholder-graphite-300';
+    'w-full px-3 py-2.5 text-sm text-graphite-800 bg-white border border-graphite-200 rounded-lg ' +
+    'focus:outline-none focus:ring-2 focus:ring-academic-400/40 focus:border-academic-500 transition placeholder-graphite-300';
 
   return (
     <div className="mt-4 bg-white rounded-2xl shadow-card border border-graphite-100 overflow-hidden">
-      {/* Cabecera colapsable */}
+
+      {/* ── Cabecera colapsable ── */}
       <button
         type="button"
         onClick={() => setIsOpen(v => !v)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-graphite-50/60 transition text-left group"
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-graphite-50/60 transition text-left"
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-academic-50 flex items-center justify-center flex-shrink-0">
@@ -107,7 +106,7 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
             <span className="ml-2 text-xs text-graphite-400">Opcional</span>
             {!isOpen && (
               <p className="text-xs text-graphite-400 mt-0.5">
-                Prepare el correo con la retroalimentación para el estudiante
+                Prepare el correo para el estudiante con un clic
               </p>
             )}
           </div>
@@ -120,7 +119,7 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
         </svg>
       </button>
 
-      {/* Contenido del panel */}
+      {/* ── Contenido del panel ── */}
       {isOpen && (
         <div className="px-6 pb-6 border-t border-graphite-100">
 
@@ -131,16 +130,20 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
                 d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
             <p className="text-xs text-amber-800 leading-relaxed">
-              <span className="font-semibold">Recuerde adjuntar manualmente el PDF descargado</span> antes de enviar el correo desde su cliente de correo.
+              <span className="font-semibold">Recuerde adjuntar manualmente el PDF o Word descargado</span>{' '}
+              antes de enviar el correo desde su cliente de correo.
             </p>
           </div>
 
           <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Columna izquierda */}
+
+            {/* ── Columna izquierda ── */}
             <div className="flex flex-col gap-4">
+
               {/* Correo del estudiante */}
               <div>
-                <label htmlFor={`${uid}-email`} className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide mb-1.5">
+                <label htmlFor={`${uid}-email`}
+                  className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide mb-1.5">
                   Correo del estudiante<span className="text-burgundy-500 ml-0.5">*</span>
                 </label>
                 <input
@@ -162,9 +165,19 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
                 {emailWarning && (
                   <p className="mt-1 text-xs text-burgundy-600 flex items-center gap-1">
                     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      <path fillRule="evenodd" clipRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" />
                     </svg>
                     {emailWarning}
+                  </p>
+                )}
+                {studentEmail && !emailWarning && !isValidEmail(studentEmail) && (
+                  <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    El formato del correo no parece válido.
                   </p>
                 )}
               </div>
@@ -172,11 +185,13 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
               {/* Asunto */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor={`${uid}-subject`} className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide">
+                  <label htmlFor={`${uid}-subj`}
+                    className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide">
                     Asunto
                   </label>
                   {isManualSubj && (
-                    <button type="button" onClick={handleRestoreSubject}
+                    <button type="button"
+                      onClick={() => { setIsManualSubj(false); setEmailSubject(buildSubject(subject)); }}
                       className="text-[11px] text-academic-500 hover:text-academic-700 transition">
                       ↺ Restaurar
                     </button>
@@ -184,11 +199,11 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
                 </div>
                 <div className="relative">
                   <input
-                    id={`${uid}-subject`}
+                    id={`${uid}-subj`}
                     type="text"
                     value={emailSubject}
                     onChange={e => { setEmailSubject(e.target.value); setIsManualSubj(true); }}
-                    className={`${inputBase} pr-16`}
+                    className={`${inputBase} ${isManualSubj ? 'pr-16' : ''}`}
                     autoComplete="off"
                   />
                   {isManualSubj && (
@@ -202,14 +217,16 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
               </div>
             </div>
 
-            {/* Columna derecha: cuerpo del correo */}
+            {/* ── Columna derecha: cuerpo del correo ── */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor={`${uid}-body`} className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide">
+                <label htmlFor={`${uid}-body`}
+                  className="block text-xs font-semibold text-graphite-600 uppercase tracking-wide">
                   Mensaje
                 </label>
                 {isManualBody && (
-                  <button type="button" onClick={handleRestoreBody}
+                  <button type="button"
+                    onClick={() => { setIsManualBody(false); setEmailBody(buildBody(studentName, subject, professor)); }}
                     className="text-[11px] text-academic-500 hover:text-academic-700 transition">
                     ↺ Restaurar plantilla
                   </button>
@@ -220,7 +237,7 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
                   id={`${uid}-body`}
                   value={emailBody}
                   onChange={e => { setEmailBody(e.target.value); setIsManualBody(true); }}
-                  rows={9}
+                  rows={7}
                   className="w-full px-3.5 py-3 text-sm text-graphite-800 bg-graphite-50/40 border border-graphite-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-academic-400/40 focus:border-academic-500 transition resize-none leading-relaxed font-[inherit]"
                   spellCheck={false}
                 />
@@ -234,11 +251,12 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
               </div>
               <p className="mt-1 text-[11px] text-graphite-400">
                 El mensaje se actualiza automáticamente al cambiar nombre, asignatura o profesor.
+                No incluye la retroalimentación completa — esa va adjunta como PDF.
               </p>
             </div>
           </div>
 
-          {/* Botones */}
+          {/* ── Botones ── */}
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -274,11 +292,21 @@ export default function EmailPanel({ studentName, subject, professor }: EmailPan
                 </>
               )}
             </button>
+          </div>
 
-            <p className="text-[11px] text-graphite-400 ml-1">
-              Se abrirá su cliente de correo con el mensaje ya redactado.
+          {/* ── Mensaje de ayuda técnica ── */}
+          <div className="mt-4 flex items-start gap-2 px-3 py-2.5 bg-graphite-50 border border-graphite-100 rounded-lg">
+            <svg className="w-3.5 h-3.5 text-graphite-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-[11px] text-graphite-500 leading-relaxed">
+              Si el botón no abre el correo, verifique que tenga un cliente de correo configurado (Outlook, Apple Mail) o
+              que Gmail esté habilitado como aplicación predeterminada para abrir enlaces de correo en su navegador.
+              En ese caso, use <span className="font-medium">Copiar mensaje</span> y péguelo manualmente.
             </p>
           </div>
+
         </div>
       )}
     </div>
