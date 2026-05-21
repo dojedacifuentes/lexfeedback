@@ -8,6 +8,7 @@ import FeedbackPanel from './components/FeedbackPanel';
 import DocumentPreview from './components/DocumentPreview';
 import ActionButtons from './components/ActionButtons';
 import Footer from './components/Footer';
+import EmailPanel from './components/EmailPanel';
 import type { Scale, AppConfig, EvaluationData } from './types';
 
 const BASE_CONFIG = {
@@ -197,6 +198,12 @@ export default function App() {
           copied={copied}
           warnings={warnings}
           onDismissWarnings={() => setWarnings([])}
+        />
+
+        <EmailPanel
+          studentName={studentName}
+          subject={subject}
+          professor={config.professor}
         />
       </main>
 
