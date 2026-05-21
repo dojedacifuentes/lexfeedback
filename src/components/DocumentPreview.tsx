@@ -80,12 +80,14 @@ export default function DocumentPreview({ evaluation, config }: DocumentPreviewP
                 {/* Tabla de datos */}
                 <div className="mb-5">
                   {[
-                    ['Asignatura',       config.subject],
+                    ['Asignatura',       config.subject || <em className="text-graphite-300">—</em>],
                     ['Profesor titular', config.professor],
                     ['Estudiante',       evaluation.studentName || <em className="text-graphite-300">sin nombre</em>],
                     ['Prueba N°',        evaluation.testNumber || <em className="text-graphite-300">—</em>],
-                    ['Puntaje total',    evaluation.totalScore ? `${evaluation.totalScore} / 100` : <em className="text-graphite-300">—</em>],
-                    ['Escala aplicada',  `${evaluation.scale}%`],
+                    ['Puntaje obtenido', evaluation.totalScore
+                      ? `${evaluation.totalScore} / ${evaluation.scaleConfig.maxScore}`
+                      : <em className="text-graphite-300">—</em>],
+                    ['Exigencia aplicada', `${evaluation.scaleConfig.requirementPercent}%`],
                     ['Nota final',       evaluation.finalGrade
                       ? <span className={`font-bold text-sm ${gradeStatus === 'approved' ? 'text-emerald-700' : gradeStatus === 'failed' ? 'text-red-700' : ''}`}>
                           {formatGrade(evaluation.finalGrade)}

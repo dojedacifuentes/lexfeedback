@@ -6,7 +6,7 @@ import type { EvaluationData, AppConfig } from '../types';
 import { formatGrade } from '../data/gradeScale';
 
 function formatDateForWord(isoDate: string): string {
-  if (!isoDate) return '—';
+  if (!isoDate) return '--';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
 }
@@ -20,22 +20,24 @@ function slugify(name: string): string {
     .toLowerCase();
 }
 
-const DARK_BLUE  = '1E3A5F';
-const GRAPHITE   = '3E4657';
-const LIGHT_GRAY = 'F5F7FB';
-const MID_GRAY   = 'C3C8D4';
+const DARK_BLUE   = '1E3A5F';
+const GRAPHITE    = '3E4657';
+const LIGHT_GRAY  = 'F5F7FB';
+const MID_GRAY    = 'C3C8D4';
 const FOOTER_GRAY = '9099A8';
 const BODY_COLOR  = '1C1C26';
 
 const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'auto' } as const;
 
 export async function generateWord(evaluation: EvaluationData, config: AppConfig): Promise<void> {
-  // ── PIE DE PÁGINA ──────────────────────────────────────
+  const { scaleConfig } = evaluation;
+
+  // Footer text (academic info only)
   const footerText = [
     config.subject || 'Asignatura',
     config.professor,
-    `Estudiante: ${evaluation.studentName || '—'}`,
-  ].join('  ·  ');
+    `Estudiante: ${evaluation.studentName || '--'}`,
+  ].join('  .  ');
 
   const footer = new Footer({
     children: [
@@ -51,28 +53,28 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
     ],
   });
 
-  // ── TABLA DE DATOS ──────────────────────────────────────
+  // Info rows with dynamic scale
   const infoRows: [string, string][] = [
-    ['Asignatura',       config.subject || '—'],
-    ['Profesor titular', config.professor],
-    ['Estudiante',       evaluation.studentName || '—'],
-    ['Prueba N°',        evaluation.testNumber  || '—'],
-    ['Puntaje total',    `${evaluation.totalScore || '—'} / 100`],
-    ['Escala aplicada',  `${evaluation.scale}%`],
-    ['Nota final',       formatGrade(evaluation.finalGrade)],
-    ['Fecha',            formatDateForWord(evaluation.date)],
+    ['Asignatura',         config.subject || '--'],
+    ['Profesor titular',   config.professor],
+    ['Estudiante',         evaluation.studentName || '--'],
+    ['Prueba N',           evaluation.testNumber  || '--'],
+    ['Puntaje obtenido',   `${evaluation.totalScore || '--'} / ${scaleConfig.maxScore}`],
+    ['Exigencia aplicada', `${scaleConfig.requirementPercent}%`],
+    ['Nota final',         formatGrade(evaluation.finalGrade)],
+    ['Fecha',              formatDateForWord(evaluation.date)],
   ];
 
-  const gradeNum = parseFloat(evaluation.finalGrade);
+  const gradeNum   = parseFloat(evaluation.finalGrade);
   const gradeColor = gradeNum >= 4.0 ? '166534' : '8B1A1A';
 
   const infoTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: {
-      top:            NO_BORDER,
-      bottom:         NO_BORDER,
-      left:           NO_BORDER,
-      right:          NO_BORDER,
+      top:              NO_BORDER,
+      bottom:           NO_BORDER,
+      left:             NO_BORDER,
+      right:            NO_BORDER,
       insideHorizontal: NO_BORDER,
       insideVertical:   NO_BORDER,
     },
@@ -103,11 +105,11 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
             borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER },
             children: [new Paragraph({
               children: [new TextRun({
-                text: value,
-                bold: isGrade,
-                size: isGrade ? 22 : 19,
+                text:  value,
+                bold:  isGrade,
+                size:  isGrade ? 22 : 19,
                 color: isGrade ? gradeColor : BODY_COLOR,
-                font: 'Calibri',
+                font:  'Calibri',
               })],
               spacing: { before: 20, after: 20 },
             })],
@@ -117,7 +119,7 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
     }),
   });
 
-  // ── CUERPO: RETROALIMENTACIÓN ────────────────────────────
+  // Feedback body
   const feedbackParagraphs = evaluation.feedback.split('\n').map(line =>
     new Paragraph({
       children: [new TextRun({ text: line, size: 21, font: 'Calibri', color: BODY_COLOR })],
@@ -125,7 +127,15 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
     })
   );
 
-  // ── DOCUMENTO ───────────────────────────────────────────
+  // Footnote
+  const footnotePara = new Paragraph({
+    children: [new TextRun({
+      text: 'Nota calculada mediante escala lineal por tramos.',
+      size: 14, color: 'B4B9C3', italics: true, font: 'Calibri',
+    })],
+    spacing: { before: 200, after: 0 },
+  });
+
   const doc = new Document({
     sections: [{
       properties: {
@@ -135,18 +145,16 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
       },
       footers: { default: footer },
       children: [
-        // Título principal
         new Paragraph({
           children: [new TextRun({
-            text: 'Retroalimentación de Evaluación',
+            text: 'Retroalimentacion de Evaluacion',
             bold: true, size: 34, color: DARK_BLUE, font: 'Calibri',
           })],
           spacing: { after: 100 },
         }),
-        // Subtítulo + línea inferior azul
         new Paragraph({
           children: [new TextRun({
-            text: `${config.subject || 'Asignatura'}  ·  Pontificia Universidad Católica de Valparaíso`,
+            text: `${config.subject || 'Asignatura'}  .  Pontificia Universidad Catolica de Valparaiso`,
             size: 18, color: '6E7488', font: 'Calibri',
           })],
           spacing: { after: 200 },
@@ -154,9 +162,7 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
             bottom: { style: BorderStyle.SINGLE, size: 12, color: DARK_BLUE, space: 6 },
           },
         }),
-        // Tabla de datos
         infoTable,
-        // Separador
         new Paragraph({
           children: [],
           spacing: { before: 200, after: 0 },
@@ -164,23 +170,20 @@ export async function generateWord(evaluation: EvaluationData, config: AppConfig
             bottom: { style: BorderStyle.SINGLE, size: 4, color: MID_GRAY, space: 6 },
           },
         }),
-        // Espacio
         new Paragraph({ children: [], spacing: { before: 80, after: 0 } }),
-        // Título sección
         new Paragraph({
           children: [new TextRun({
-            text: 'Retroalimentación',
+            text: 'Retroalimentacion',
             bold: true, size: 26, color: DARK_BLUE, font: 'Calibri',
           })],
           spacing: { before: 80, after: 160 },
         }),
-        // Cuerpo
         ...feedbackParagraphs,
+        footnotePara,
       ],
     }],
   });
 
-  // ── DESCARGA ─────────────────────────────────────────────
   const blob = await Packer.toBlob(doc);
   const url  = URL.createObjectURL(blob);
   const link = document.createElement('a');
