@@ -136,29 +136,26 @@ export function generatePDF(evaluation: EvaluationData, config: AppConfig): void
   // ── PIE DE PÁGINA EN TODAS LAS PÁGINAS ──────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const totalPages = (doc.internal as any).getNumberOfPages() as number;
-  const footerMain =
-    `Documento generado mediante LexFeedback  ·  Demo creada por ${config.createdBy}, ${config.createdByRole}.`;
-  const footerLine2 =
-    'Los datos no han sido enviados a servidores externos — generación local en navegador.';
+  const footerText = [
+    config.subject || 'Asignatura',
+    config.professor,
+    `Estudiante: ${evaluation.studentName || '—'}`,
+  ].join('  ·  ');
 
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
 
-    // Línea de pie
     doc.setDrawColor(195, 200, 212);
     doc.setLineWidth(0.25);
-    doc.line(ML, PH - 20, PW - MR, PH - 20);
+    doc.line(ML, PH - 16, PW - MR, PH - 16);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
-    doc.setTextColor(155, 160, 172);
-    doc.text(footerMain,  ML, PH - 15);
-    doc.text(footerLine2, ML, PH - 10);
+    doc.setTextColor(144, 153, 168);
+    doc.text(footerText, ML, PH - 10);
 
     if (totalPages > 1) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.text(`Página ${p} de ${totalPages}`, PW - MR, PH - 15, { align: 'right' });
+      doc.text(`Página ${p} de ${totalPages}`, PW - MR, PH - 10, { align: 'right' });
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getGrade } from './data/gradeScale';
 import { generatePDF } from './utils/pdfExport';
+import { generateWord } from './utils/wordExport';
 import Header from './components/Header';
 import EvaluationForm from './components/EvaluationForm';
 import FeedbackPanel from './components/FeedbackPanel';
@@ -94,21 +95,31 @@ export default function App() {
     return { blocking, all };
   }
 
+  function buildEvaluation(): EvaluationData {
+    return {
+      studentName:   studentName.trim(),
+      testNumber:    testNumber.trim(),
+      totalScore,
+      scale,
+      finalGrade:    finalGrade || '—',
+      isManualGrade: isManual,
+      feedback:      feedback.trim(),
+      date,
+    };
+  }
+
   function handleDownloadPDF() {
     const { blocking, all } = buildWarnings();
     if (blocking.length > 0) { setWarnings(all); return; }
     setWarnings(all);
-    const ev: EvaluationData = {
-      studentName:  studentName.trim(),
-      testNumber:   testNumber.trim(),
-      totalScore,
-      scale,
-      finalGrade:   finalGrade || '—',
-      isManualGrade: isManual,
-      feedback:     feedback.trim(),
-      date,
-    };
-    generatePDF(ev, config);
+    generatePDF(buildEvaluation(), config);
+  }
+
+  function handleDownloadWord() {
+    const { blocking, all } = buildWarnings();
+    if (blocking.length > 0) { setWarnings(all); return; }
+    setWarnings(all);
+    void generateWord(buildEvaluation(), config);
   }
 
   async function handleCopyText() {
@@ -178,6 +189,7 @@ export default function App() {
         {/* Botones de acción */}
         <ActionButtons
           onDownloadPDF={handleDownloadPDF}
+          onDownloadWord={handleDownloadWord}
           onClear={handleClear}
           onCopyText={handleCopyText}
           onRestoreAutoGrade={handleRestoreAutoGrade}

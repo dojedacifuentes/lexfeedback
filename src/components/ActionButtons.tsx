@@ -1,5 +1,6 @@
 interface ActionButtonsProps {
   onDownloadPDF: () => void;
+  onDownloadWord: () => void;
   onClear: () => void;
   onCopyText: () => void;
   onRestoreAutoGrade: () => void;
@@ -10,7 +11,7 @@ interface ActionButtonsProps {
 }
 
 export default function ActionButtons({
-  onDownloadPDF, onClear, onCopyText, onRestoreAutoGrade,
+  onDownloadPDF, onDownloadWord, onClear, onCopyText, onRestoreAutoGrade,
   isManualGrade, copied, warnings, onDismissWarnings,
 }: ActionButtonsProps) {
   return (
@@ -49,18 +50,31 @@ export default function ActionButtons({
       {/* Botones de acción */}
       <div className="bg-white rounded-2xl shadow-card border border-graphite-100 px-6 py-5">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          {/* Acción principal */}
-          <button
-            type="button"
-            onClick={onDownloadPDF}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-academic-600 hover:bg-academic-700 text-white text-sm font-semibold rounded-xl shadow-sm transition focus:outline-none focus:ring-2 focus:ring-academic-400/50 focus:ring-offset-2 active:scale-[0.98]"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Descargar PDF
-          </button>
+          {/* Acciones de exportación */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onDownloadPDF}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-academic-600 hover:bg-academic-700 text-white text-sm font-semibold rounded-xl shadow-sm transition focus:outline-none focus:ring-2 focus:ring-academic-400/50 focus:ring-offset-2 active:scale-[0.98]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Descargar PDF
+            </button>
+            <button
+              type="button"
+              onClick={onDownloadWord}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-graphite-700 hover:bg-graphite-800 text-white text-sm font-semibold rounded-xl shadow-sm transition focus:outline-none focus:ring-2 focus:ring-graphite-400/50 focus:ring-offset-2 active:scale-[0.98]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Descargar Word
+            </button>
+          </div>
 
           {/* Acciones secundarias */}
           <div className="flex flex-wrap gap-2">
