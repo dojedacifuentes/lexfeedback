@@ -3,6 +3,7 @@ import type { Scale } from '../types';
 import { getGradeStatus } from '../data/gradeScale';
 
 interface EvaluationFormProps {
+  subject: string;
   studentName: string;
   testNumber: string;
   totalScore: string;
@@ -10,6 +11,7 @@ interface EvaluationFormProps {
   finalGrade: string;
   isManualGrade: boolean;
   date: string;
+  onSubjectChange: (v: string) => void;
   onStudentNameChange: (v: string) => void;
   onTestNumberChange: (v: string) => void;
   onTotalScoreChange: (v: string) => void;
@@ -42,8 +44,8 @@ function InputField({
 }
 
 export default function EvaluationForm({
-  studentName, testNumber, totalScore, scale, finalGrade, isManualGrade, date,
-  onStudentNameChange, onTestNumberChange, onTotalScoreChange, onScaleChange,
+  subject, studentName, testNumber, totalScore, scale, finalGrade, isManualGrade, date,
+  onSubjectChange, onStudentNameChange, onTestNumberChange, onTotalScoreChange, onScaleChange,
   onFinalGradeChange, onDateChange, onRestoreAutoGrade,
 }: EvaluationFormProps) {
   const uid = useId();
@@ -71,6 +73,19 @@ export default function EvaluationForm({
           <p className="text-xs text-graphite-400">Ingrese los datos manualmente</p>
         </div>
       </div>
+
+      {/* Asignatura */}
+      <InputField id={`${uid}-subject`} label="Asignatura" required>
+        <input
+          id={`${uid}-subject`}
+          type="text"
+          value={subject}
+          onChange={e => onSubjectChange(e.target.value)}
+          placeholder="Ej. Filosofía del Derecho, Teoría de la Normatividad…"
+          className={inputBase}
+          autoComplete="off"
+        />
+      </InputField>
 
       {/* Nombre del estudiante */}
       <InputField id={`${uid}-name`} label="Nombre del estudiante" required>

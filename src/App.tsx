@@ -9,8 +9,7 @@ import ActionButtons from './components/ActionButtons';
 import Footer from './components/Footer';
 import type { Scale, AppConfig, EvaluationData } from './types';
 
-const DEFAULT_CONFIG: AppConfig = {
-  subject:       'Filosofía del Derecho',
+const BASE_CONFIG = {
   professor:     'Profesor Quintero Fuentes',
   createdBy:     'Diego Ojeda',
   createdByRole: 'Ayudante de Filosofía del Derecho PUCV',
@@ -21,8 +20,7 @@ function getTodayISO(): string {
 }
 
 export default function App() {
-  const config = DEFAULT_CONFIG;
-
+  const [subject,      setSubject]      = useState('');
   const [studentName,  setStudentName]  = useState('');
   const [testNumber,   setTestNumber]   = useState('');
   const [totalScore,   setTotalScore]   = useState('');
@@ -33,6 +31,8 @@ export default function App() {
   const [date,         setDate]         = useState(getTodayISO);
   const [warnings,     setWarnings]     = useState<string[]>([]);
   const [copied,       setCopied]       = useState(false);
+
+  const config: AppConfig = { ...BASE_CONFIG, subject };
 
   // Recalcula nota automáticamente cuando cambia puntaje o escala
   useEffect(() => {
@@ -149,6 +149,7 @@ export default function App() {
         {/* Dos columnas: formulario + textarea */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <EvaluationForm
+            subject={subject}
             studentName={studentName}
             testNumber={testNumber}
             totalScore={totalScore}
@@ -156,6 +157,7 @@ export default function App() {
             finalGrade={finalGrade}
             isManualGrade={isManual}
             date={date}
+            onSubjectChange={setSubject}
             onStudentNameChange={setStudentName}
             onTestNumberChange={setTestNumber}
             onTotalScoreChange={handleScoreChange}
